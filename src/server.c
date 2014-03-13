@@ -11,12 +11,17 @@
 #include <unistd.h>	//close
 #include <time.h>	//system time
 
+#include "protocol.h"
 #include "server.h"
 #include "bool.h"
 
 #define SERV_PORT 6666
 #define LISTENQ 8	/*maximum number of client connections*/
 
+#define BUF_SIZE 256
+
+char sendbuf[BUF_SIZE];
+char recvbuf[BUF_SIZE];
 
 
 int main(void){
@@ -62,15 +67,12 @@ int main(void){
 			
 			//close listening socket
 			close(listenfd);
-			char recvbuf[33];
-			readn(connfd, recvbuf, 33);
-			//while( (n = readn(connfd, recvbuf, 33)) == 33){
+			while( (n = readn(connfd, recvbuf, REQUEST_PACKET_SIZE)) == REQUEST_PACKET_SIZE){
 				
 				
-			//}
-			n = 1;
+			}
 			if( n < 0)
-				//printf("Read error\n");
+				printf("Read error\n");
 			printf("Client from %s quit...A child process end\n", client_ip);
 			exit(0);
 		}
