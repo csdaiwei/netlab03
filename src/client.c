@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "client.h"
-#include "bool.h"
 
 #include <errno.h>	//readn errno
 #include <arpa/inet.h>	//inet_addr()
@@ -10,6 +8,9 @@
 #include <unistd.h>	//close()
 #include <sys/socket.h>    
 #include <sys/types.h>
+
+#include "client.h"
+#include "bool.h"
 
 #define SERV_IP "127.0.0.1"
 #define SERV_PORT 6666
@@ -40,34 +41,11 @@ main(void){
 	}
 	
 	/*code here*/
+	
 
 	/*close the tcp connection before exit*/
 	close(client_sock);
 	return 0;
 }
 
-
-/* readn - read exactly n bytes */
-int readn( int sock_fd, char *bp, size_t len)
-{
-	int cnt;
-	int rc;
-
-	cnt = len;
-	while ( cnt > 0 )
-	{
-		rc = recv( sock_fd, bp, cnt, 0 );
-		if ( rc < 0 )				/* read error? */
-		{
-			if ( errno == EINTR )	/* interrupted? */
-				continue;			/* restart the read */
-			return -1;				/* return error */
-		}
-		if ( rc == 0 )				/* EOF? */
-			return len - cnt;		/* return short count */
-		bp += rc;
-		cnt -= rc;
-	}
-	return len;
-}
 

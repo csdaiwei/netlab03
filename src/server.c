@@ -3,22 +3,23 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <string.h>
+#include <arpa/inet.h>	//pton
+#include <unistd.h>	//close
 #include <errno.h>	//readn errno
 #include <time.h>	//system time
 
 #include "server.h"
 #include "bool.h"
+#include "readn.h"
 
 #define SERV_PORT 6666
 #define LISTENQ 8	/*maximum number of client connections*/
 
 
-char recvbuf[BUFFER_SIZE];
-char sendbuf[BUFFER_SIZE];
 
 int main(void){
 	int listenfd, connfd, n;
@@ -63,12 +64,15 @@ int main(void){
 			
 			//close listening socket
 			close(listenfd);
-			while( (n = readn(connfd, recvbuf, 33)) == 33){
+			char recvbuf[33];
+			readn(connfd, recvbuf, 33);
+			//while( (n = readn(connfd, recvbuf, 33)) == 33){
 				
 				
-			}
+			//}
+			n = 1;
 			if( n < 0)
-				printf("Read error\n");
+				//printf("Read error\n");
 			printf("Client from %s quit...A child process end\n", client_ip);
 			exit(0);
 		}
@@ -79,27 +83,5 @@ int main(void){
 }
 
 
-/* readn - read exactly n bytes */
-int readn( int sock_fd, char *bp, size_t len)
-{
-	int cnt;
-	int rc;
 
-	cnt = len;
-	while ( cnt > 0 )
-	{
-		rc = recv( sock_fd, bp, cnt, 0 );
-		if ( rc < 0 )				/* read error? */
-		{
-			if ( errno == EINTR )	/* interrupted? */
-				continue;			/* restart the read */
-			return -1;				/* return error */
-		}
-		if ( rc == 0 )				/* EOF? */
-			return len - cnt;		/* return short count */
-		bp += rc;
-		cnt -= rc;
-	}
-	return len;
-}
 
