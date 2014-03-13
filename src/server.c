@@ -9,12 +9,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>	//pton
 #include <unistd.h>	//close
-#include <errno.h>	//readn errno
 #include <time.h>	//system time
 
 #include "server.h"
 #include "bool.h"
-#include "readn.h"
 
 #define SERV_PORT 6666
 #define LISTENQ 8	/*maximum number of client connections*/

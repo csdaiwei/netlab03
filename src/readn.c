@@ -1,6 +1,7 @@
-#ifndef __READN_H__
-#define __READN_H__
-
+#include <stdlib.h> 	//size_t
+#include <errno.h>	//readn errno
+#include <sys/socket.h>    
+#include <sys/types.h>
 
 /* readn - read exactly n bytes */
 int readn( int sock_fd, char *bp, size_t len)
@@ -26,4 +27,3 @@ int readn( int sock_fd, char *bp, size_t len)
 	return len;
 }
 
-#endif

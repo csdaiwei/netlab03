@@ -1,17 +1,26 @@
-CFLAGS = -Wall -Werror -O2 -I./include
+CFLAGS = -MD -Wall -Werror -O2 -I./include
+CFILES = $(shell find src/ -name "*.c")
+OBJS = $(CFILES:.c=.o)
 
-.PHONY:all server client clean
+#objects for server
+SOBJS = src/server.o src/readn.o	
+#objects for client
+COBJS = src/client.o src/readn.o
 
-all:server client
+all: server client
 
-server: src/server.c
-	gcc $(CFLAGS) src/server.c -o server 
+server:$(SOBJS)
+	gcc $(SOBJS) -o server
 
-client: src/client.c
-	gcc $(CFLAGS) src/client.c -o client 
+client:$(COBJS)
+	gcc $(COBJS) -o client
 
+# other dependencies
+$(OBJS):include/bool.h
+$(SOBJS):include/server.h
+$(COBJS):include/client.h
+
+.PHONY:clean
 clean:
-	rm -rf server client
+	rm -f server client $(OBJS) $(OBJS:.o=.d)
 	find -name "*~" | xargs rm -f
-
-
