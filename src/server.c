@@ -69,7 +69,26 @@ int main(void){
 			close(listenfd);
 			while( (n = readn(connfd, recvbuf, IM_PKT_SIZE)) == IM_PKT_SIZE){
 				
-				
+				/*handle the request packet (usually by a response packet)*/
+				struct im_pkt *request_pkt = (struct im_pkt *)recvbuf;
+				struct im_pkt *response_pkt = (struct im_pkt *)sendbuf;
+				memset(sendbuf, 0, sizeof(sendbuf));
+
+				switch(request_pkt -> service){
+					case SERVICE_LOGIN: ;
+						/*check the username repeat or not, then response*/
+						struct login_request_data *req = (struct login_request_data *)request_pkt -> data;
+						struct login_response_data *resp = (struct login_response_data *)response_pkt -> data;
+						if(strcmp(req -> username, "david") == 0)
+							resp -> login_success = true;
+						else
+							resp -> login_success = false;
+						send(connfd, response_pkt, IM_PKT_SIZE, 0);
+						break;
+					default:
+						printf("Received a error packet, drop it.\n");break;
+				}
+				memset(recvbuf, 0, sizeof(recvbuf));
 			}
 			if( n < 0)
 				printf("Read error\n");

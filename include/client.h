@@ -4,4 +4,6 @@
 /* readn - read exactly n bytes */
 int readn( int sock_fd, char *bp, size_t len);
 
+bool login(int, char*);
+
 #endif

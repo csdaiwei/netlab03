@@ -20,11 +20,11 @@
 
 char sendbuf[BUF_SIZE];
 char recvbuf[BUF_SIZE];
+int client_sock; 		/*global client socket*/
 
 int 
 main(void){
 
-	int client_sock;
 	struct sockaddr_in server_addr;//server address
 	
 	/*create socket of TCP connection*/
@@ -48,15 +48,13 @@ main(void){
 	/*code here*/
 	
 	/*send a packet to server to tell it my name*/
-	memset(sendbuf, 0, BUF_SIZE);
-	struct request_packet *request = (struct request_packet *)sendbuf;		
-	request -> request_type = 0x00; //login request
-	strncpy(request -> sender_name, "David", 19);
-	request -> sender_name[19] = '\0';	
-	send(client_sock, request, REQUEST_PACKET_SIZE, 0);
-	printf("successful login\n");	
+	if(!login(client_sock, "david")){
+		printf("login error\n");
+		exit(-1);
+	}
+	printf("login success\n");
 	while(1){
-		//waiting	
+		//to be completed	
 	}
 
 	/*close the tcp connection before exit*/
@@ -64,4 +62,27 @@ main(void){
 	return 0;
 }
 
+/*send a login request to server*/
+bool 
+login(int client_sock, char *username){
 
+	/*construct a login request packet and send it*/
+	memset(sendbuf, 0, sizeof(sendbuf));
+	struct im_pkt *login_pkt = (struct im_pkt *)sendbuf;
+	login_pkt -> service = SERVICE_LOGIN;
+	struct login_request_data *req = (struct login_request_data *)login_pkt -> data; 
+	strncpy(req -> username, username, USERNAME_LENGTH);
+	req -> username[USERNAME_LENGTH - 1] = '\0';
+	send(client_sock, login_pkt, IM_PKT_SIZE, 0);
+
+	/*parse the response packet*/
+	memset(recvbuf, 0 ,sizeof(recvbuf));
+	readn(client_sock, recvbuf, IM_PKT_SIZE);
+	login_pkt = (struct im_pkt *)recvbuf;
+	if(login_pkt -> service == SERVICE_LOGIN){
+		struct login_response_data *resp = (struct login_response_data *)login_pkt -> data;
+		if(resp -> login_success)
+			return true;
+	}
+	return false;
+}

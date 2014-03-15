@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Werror -O2 -I./include
+CFLAGS = -Wall -O2 -I./include #-Werror 
 
 
 #objects for server
