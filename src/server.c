@@ -11,6 +11,8 @@
 #include <unistd.h>	//close
 #include <time.h>	//system time
 
+#include <pthread.h>
+
 #include "protocol.h"
 #include "server.h"
 #include "bool.h"
@@ -20,13 +22,10 @@
 
 #define BUF_SIZE 256
 
-char sendbuf[BUF_SIZE];
-char recvbuf[BUF_SIZE];
-
+int listenfd; /*global socket for server*/
 
 int main(void){
-	int listenfd, connfd, n;
-	pid_t childpid;
+	int connfd;
 	socklen_t clilen;
 	struct sockaddr_in cliaddr, servaddr;
 
@@ -61,46 +60,58 @@ int main(void){
 	
 		printf("Received request from %s ...\n", client_ip);
 
-		if( (childpid = fork()) == 0 ){ //if it's 0, it's child process
-	
-			printf("Child created for dealing with client requests\n");
-			
-			//close listening socket
-			close(listenfd);
-			while( (n = readn(connfd, recvbuf, IM_PKT_SIZE)) == IM_PKT_SIZE){
-				
-				/*handle the request packet (usually by a response packet)*/
-				struct im_pkt *request_pkt = (struct im_pkt *)recvbuf;
-				struct im_pkt *response_pkt = (struct im_pkt *)sendbuf;
-				memset(sendbuf, 0, sizeof(sendbuf));
-
-				switch(request_pkt -> service){
-					case SERVICE_LOGIN: ;
-						/*check the username repeat or not, then response*/
-						struct login_request_data *req = (struct login_request_data *)request_pkt -> data;
-						struct login_response_data *resp = (struct login_response_data *)response_pkt -> data;
-						if(strcmp(req -> username, "david") == 0)
-							resp -> login_success = true;
-						else
-							resp -> login_success = false;
-						send(connfd, response_pkt, IM_PKT_SIZE, 0);
-						break;
-					default:
-						printf("Received a error packet, drop it.\n");break;
-				}
-				memset(recvbuf, 0, sizeof(recvbuf));
-			}
-			if( n < 0)
-				printf("Read error\n");
-			printf("Client from %s quit...A child process end\n", client_ip);
-			exit(0);
+		/*create a thread to handle a client*/
+		pthread_t tid;
+		printf("connfd:%d\n", connfd);
+		int rc = pthread_create(&tid, NULL, client_handler, (void*)connfd);
+		if(rc){
+			printf("ERROR creating thread, return code %d\n", rc);
+			exit(-1);
 		}
-
-		close(connfd);
 	}
-
+	/**/
 }
 
 
+void *client_handler(void * connfd){
 
+	int n;	/*number received*/
+	int client_socket = (int)connfd;
+	long tid = pthread_self();
+	
+	/*each threah has its own buf*/
+	char sendbuf[BUF_SIZE];
+	char recvbuf[BUF_SIZE];	
+	
+	printf("thread %lu created for dealing with client requests\n", tid);
+
+	while( (n = readn(client_socket, recvbuf, IM_PKT_SIZE)) == IM_PKT_SIZE){
+				
+		/*handle the request packet (usually by a response packet)*/
+		struct im_pkt *request_pkt = (struct im_pkt *)recvbuf;
+		struct im_pkt *response_pkt = (struct im_pkt *)sendbuf;
+		memset(sendbuf, 0, sizeof(sendbuf));
+
+		switch(request_pkt -> service){
+			case SERVICE_LOGIN: ;
+				/*check the username repeat or not, then response*/
+				struct login_request_data *req = (struct login_request_data *)request_pkt -> data;	
+				struct login_response_data *resp = (struct login_response_data *)response_pkt -> data;
+				if(strcmp(req -> username, "david") == 0)
+					resp -> login_success = true;
+				else
+					resp -> login_success = false;
+				send(client_socket, response_pkt, IM_PKT_SIZE, 0);
+				break;
+			default:
+				printf("Received a error packet, drop it.\n");break;
+		}
+				memset(recvbuf, 0, sizeof(recvbuf));
+	}
+	if( n < 0)
+		printf("Read error\n");
+	printf("Client from %s quit...A child process end\n", "client_ip");
+	pthread_exit(NULL);
+
+}
 

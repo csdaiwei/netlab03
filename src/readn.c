@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h> 	//size_t
 #include <errno.h>	//readn errno
 #include <sys/socket.h>    
@@ -12,6 +13,7 @@ int readn( int sock_fd, char *bp, size_t len)
 	cnt = len;
 	while ( cnt > 0 )
 	{
+		printf("in readn, sock:%d\n", sock_fd);
 		rc = recv( sock_fd, bp, cnt, 0 );
 		if ( rc < 0 )				/* read error? */
 		{
