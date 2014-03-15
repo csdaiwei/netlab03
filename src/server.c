@@ -25,31 +25,27 @@
 int listenfd; /*global socket for server*/
 
 int main(void){
+
 	int connfd;
 	socklen_t clilen;
 	struct sockaddr_in cliaddr, servaddr;
-
-	/*create a socket*/
+	
+	/*preparations of the server*/
 	if((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 		perror("problem in creating socket");
-		exit(2);
+		exit(-1);
 	}
-
-	/*preparation of the socket address*/
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port = htons(SERV_PORT);
-
-	/*bind the socket*/
 	bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
-
-	/*listen to the socket by creating a connection queue , then wait for clients*/
 	listen(listenfd, LISTENQ);
 
 	printf("Server running... waiting for connections.\n");
 
-	while(true){
+	/*keep listening to client request after preparations*/
+	for( ; ; ){
 	
 		clilen = sizeof(cliaddr);
 		//accept a connection
@@ -97,11 +93,13 @@ void *client_handler(void * connfd){
 				/*check the username repeat or not, then response*/
 				struct login_request_data *req = (struct login_request_data *)request_pkt -> data;	
 				struct login_response_data *resp = (struct login_response_data *)response_pkt -> data;
-				if(strcmp(req -> username, "david") == 0)
+				if(strcmp(req -> username, "david") == 0)//to be implement
 					resp -> login_success = true;
 				else
 					resp -> login_success = false;
 				send(client_socket, response_pkt, IM_PKT_SIZE, 0);
+				/*add the user into a queue*/
+
 				break;
 			default:
 				printf("Received a error packet, drop it.\n");break;
@@ -110,7 +108,7 @@ void *client_handler(void * connfd){
 	}
 	if( n < 0)
 		printf("Read error\n");
-	printf("Client from %s quit...A child process end\n", "client_ip");
+	printf("Client from %s quit...A child process end\n", "client_ip");//to be implement
 	pthread_exit(NULL);
 
 }

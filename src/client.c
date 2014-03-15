@@ -53,7 +53,7 @@ main(void){
 		exit(-1);
 	}
 	printf("login success\n");
-	while(1){
+	for( ; ; ){
 		//to be completed	
 	}
 
@@ -61,6 +61,7 @@ main(void){
 	close(client_sock);
 	return 0;
 }
+
 
 /*send a login request to server*/
 bool 
