@@ -67,7 +67,7 @@ int main(void){
 			
 			//close listening socket
 			close(listenfd);
-			while( (n = readn(connfd, recvbuf, REQUEST_PACKET_SIZE)) == REQUEST_PACKET_SIZE){
+			while( (n = readn(connfd, recvbuf, IM_PKT_SIZE)) == IM_PKT_SIZE){
 				
 				
 			}

@@ -1,21 +1,54 @@
 #ifndef __PROTOCOL_H__
 #define __PROTOCOL_H__
 
+#include "bool.h"
+
 #pragma pack(1)
-struct request_packet {
-	char request_type;
-	char sender_name[20];
-	char recipient_name[20];
-	char text[100];
+
+/*the instant message packet structure*/
+struct im_pkt {
+	char service;
+	char data[200];
 };
 
-struct response_packet {
-	char response_type;
+/*these struct below will be 
+ *the data field of the im_pkt*/
+struct login_request
+{
+	char username[20];
+	char padding[180];
 };
+
+struct login_response
+{
+	bool login_success;
+	char padding[199];
+};
+
+struct single_message_data
+{
+	char sender[20];
+	char recipient[20];
+	char text[100];
+	char padding[60];
+};
+
+struct multi_message_data
+{
+	char sender[20];
+	char text[100];
+	char padding[80];
+};
+
 #pragma pack()
 
-const int REQUEST_PACKET_SIZE = sizeof(struct request_packet);
-const int RESPONSE_PACKET_SIZE = sizeof(struct response_packet);
+/*define of service field*/
+#define SERVICE_LOGIN 0x00
+#define SERVICE_LOGOUT 0x01
+#define SERVICE_SINGLE_MESSAGE 0x02
+#define SERVICE_MULTI_MESSAGE 0x03
+
+const int IM_PKT_SIZE = sizeof(struct im_pkt);
 
 #endif
 

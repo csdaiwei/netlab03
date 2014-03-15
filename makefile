@@ -1,6 +1,6 @@
-CFLAGS = -MD -Wall -Werror -O2 -I./include
-CFILES = $(shell find src/ -name "*.c")
-OBJS = $(CFILES:.c=.o)
+CC = gcc
+CFLAGS = -Wall -Werror -O2 -I./include
+
 
 #objects for server
 SOBJS = src/server.o src/readn.o	
@@ -10,17 +10,17 @@ COBJS = src/client.o src/readn.o
 all: server client
 
 server:$(SOBJS)
-	gcc $(SOBJS) -o server
+	$(CC) $(CFLAGS) $(SOBJS) -o server
 
 client:$(COBJS)
-	gcc $(COBJS) -o client
+	$(CC) $(CFLAGS) $(COBJS) -o client
 
 # other dependencies
-$(OBJS):include/bool.h
+$(OBJS):include/bool.h include/protocol.h
 $(SOBJS):include/server.h
 $(COBJS):include/client.h
 
 .PHONY:clean
 clean:
-	rm -f server client $(OBJS) $(OBJS:.o=.d)
+	rm -f server client src/*.o
 	find -name "*~" | xargs rm -f
