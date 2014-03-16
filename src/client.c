@@ -76,19 +76,27 @@ login(int client_sock){
 
 		/*construct a login request packet and send it*/
 		memset(sendbuf, 0, sizeof(sendbuf));
-		struct im_pkt *login_pkt = (struct im_pkt *)sendbuf;
-		login_pkt -> service = SERVICE_LOGIN;
-		struct login_request_data *req = (struct login_request_data *)login_pkt -> data; 
-		strncpy(req -> username, username, 20);
-		send(client_sock, login_pkt, IM_PKT_SIZE, 0);
+		struct im_pkt_head *request_head = (struct im_pkt_head *)sendbuf;
+		construct_im_pkt_head(request_head, TYPE_REQUEST, SERVICE_LOGIN, 20);	//20 is the data size , maybe there need hton
+		//struct login_request_data *req = (struct login_request_data *)login_pkt -> data; 
+		
+		strncpy(&sendbuf[IM_PKT_HEAD_SIZE], username, 20);//add the data field of the packet
+		send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + 20, 0);
 
-		/*parse the response packet*/
+		/*int i;
+		for(i = 0; i < (IM_PKT_HEAD_SIZE + 20); i++)
+			printf("%02x ", sendbuf[i]);
+		printf("\n");*/
+
+		/*get and parse the response packet*/
 		memset(recvbuf, 0 ,sizeof(recvbuf));
-		readn(client_sock, recvbuf, IM_PKT_SIZE);
-		login_pkt = (struct im_pkt *)recvbuf;
-		if(login_pkt -> service == SERVICE_LOGIN){
-			struct login_response_data *resp = (struct login_response_data *)login_pkt -> data;
-			if(resp -> login_success)
+		readvrec(client_sock, recvbuf, BUF_SIZE);
+		
+		struct im_pkt_head *response_head = (struct im_pkt_head *)recvbuf;
+		if(response_head -> service == SERVICE_LOGIN){
+			char *response_data = &recvbuf[IM_PKT_HEAD_SIZE];
+			bool login_success = (bool) response_data[0];
+			if(login_success)
 				break;
 		}
 		printf(	"Sorry, the name %s seems to have been taken, you can pick another one.\n\n", username);

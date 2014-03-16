@@ -62,11 +62,10 @@ int main(void){
 		//accept a connection
 		clilen = sizeof(cliaddr);
 		connfd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);
-			
-		char client_ip[20];
+		
+		/*char client_ip[20];
 		inet_ntop(AF_INET, &cliaddr.sin_addr.s_addr, client_ip, 16);		
-	
-		//printf("Received request from %s ...\n", client_ip);
+		printf("Received request from %s ...\n", client_ip);*/
 
 		/*create a thread to handle a client*/
 		pthread_t tid;
@@ -76,7 +75,7 @@ int main(void){
 			exit(-1);
 		}
 	}
-	/**/
+	//end of server main
 }
 
 void *client_handler(void * connfd){
@@ -95,36 +94,45 @@ void *client_handler(void * connfd){
 	
 	//printf("\tthread %lu created for dealing with client requests\n", tid);
 
-	while( (n = readn(client_socket, recvbuf, IM_PKT_SIZE)) == IM_PKT_SIZE){
-				
-		/*handle the request packet (usually by a response packet)*/
-		struct im_pkt *request_pkt = (struct im_pkt *)recvbuf;
-		struct im_pkt *response_pkt = (struct im_pkt *)sendbuf;
+	/*Receive the request im packet by two steps.
+	 *Firstly receive the head field, secondly receive the data field.
+	 *Then handle the request packet (usually by a response packet)*/
+	while( (n = readvrec(client_socket, recvbuf, BUF_SIZE)) > 0){
+		printf("1\n");
+		struct im_pkt_head *request_head = (struct im_pkt_head *)recvbuf;
+		char *request_data = &recvbuf[IM_PKT_HEAD_SIZE];
+		/*read the data field of the im packet
+		n = readn(client_socket, &recvbuf[IM_PKT_HEAD_SIZE], 20);
+		printf("2\n");*/
+		struct im_pkt_head *response_head = (struct im_pkt_head *)sendbuf;
+		char *response_data = &sendbuf[IM_PKT_HEAD_SIZE];
 		memset(sendbuf, 0, sizeof(sendbuf));
-
-		switch(request_pkt -> service){
+		if(request_head -> type != TYPE_REQUEST){
+			printf("Received a error packet, drop it.\n");
+			break;
+		}
+		
+		switch(request_head -> service){
 			case SERVICE_LOGIN: ;	//void statement necessary
 				
-				struct login_request_data *req_data = (struct login_request_data *)request_pkt -> data;	
-				struct login_response_data *resp_data = (struct login_response_data *)response_pkt -> data;
-				
-				strncpy(username, req_data -> username, 19);
+				strncpy(username, request_data, 19);
 				username[19] = '\0';
 
-				/*check username repeat or not*/
+				//check username repeat or not
 				pthread_mutex_lock(&mutex);
-				if(find_user_by_name( user_q, req_data -> username) == NULL){
-					resp_data -> login_success = true;
-					struct user_node *n = init_user_node(client_socket, req_data -> username);
-					enqueue(user_q, n);
+				if(find_user_by_name( user_q, username) == NULL){
+					response_data[0] = true;
+					struct user_node *pnode = init_user_node(client_socket, username);
+					enqueue(user_q, pnode);
 					status = ONLINE_STATUS;
 					printf("\nuser %s login.\n", username);
 				}
 				else
-					resp_data -> login_success = false;
+					response_data[0] = false;
 				pthread_mutex_unlock(&mutex);
-				/*response login info to the client*/
-				send(client_socket, response_pkt, IM_PKT_SIZE, 0);
+				//response login info to the client
+				construct_im_pkt_head(response_head, TYPE_RESPONSE, SERVICE_LOGIN, 1);
+				send(client_socket, sendbuf, IM_PKT_HEAD_SIZE + 1, 0);
 				break;
 			case SERVICE_LOGOUT: ;
 				break;

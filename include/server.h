@@ -1,15 +1,22 @@
 #ifndef __SERVER_H__
 #define __SERVER_H__
 
-#define ONLINE_STATUS 1
+#define ONLINE_STATUS 1 // to be improve
+
+
+void* client_handler(void*);
+
+/*the buf[size-1] will always be \0*/
+int get_keyboard_input(char *buf, int size);
 
 
 /* readn - read exactly n bytes */
 int readn( int sock_fd, char *bp, size_t len);
 
-/*the buf[size-1] will always be \0*/
-int get_keyboard_input(char *buf, int size);
+/* readvrec - read a variable record */
+int readvrec( int sock_fd, char *bp, size_t len );
 
-void* client_handler(void*);
+/*construct an im packet head to "h"(first parameter)*/
+void construct_im_pkt_head(struct im_pkt_head *h, char type, char service, short data_size);
 
 #endif

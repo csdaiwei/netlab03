@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -O2 -pthread -I./include #-Werror 
 
 #objects for both server and client 
-OBJS = src/readn.o src/queue.o src/keyboard.o
+OBJS = src/network.o src/queue.o src/keyboard.o
 #objects for server
 SOBJS = src/server.o $(OBJS)
 #objects for client

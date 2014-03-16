@@ -2,7 +2,7 @@
 #define __QUEUE_H__
 
 
-extern int MAX_QUEUE_SIZE;
+//extern int MAX_QUEUE_SIZE;
 
 struct user_node {
 	char username[20];
