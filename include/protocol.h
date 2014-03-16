@@ -49,9 +49,8 @@ struct multi_message_data
 #define SERVICE_MULTI_MESSAGE 0x03
 
 /*const variables*/
-#define USERNAME_LENGTH 20
 #define TEXT_LENGTH 100
-const int IM_PKT_SIZE = sizeof(struct im_pkt);
+#define IM_PKT_SIZE  sizeof(struct im_pkt)
 
 #endif
 
