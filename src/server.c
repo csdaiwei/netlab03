@@ -9,7 +9,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>	//pton
 #include <unistd.h>	//close
-//#include <time.h>	//system time
 
 #include <assert.h>
 #include <pthread.h>
@@ -112,8 +111,8 @@ void *client_handler(void * connfd){
 				strncpy(username, req_data -> username, 19);
 				username[19] = '\0';
 
+				/*check username repeat or not*/
 				pthread_mutex_lock(&mutex);
-
 				if(find_user_by_name( user_q, req_data -> username) == NULL){
 					resp_data -> login_success = true;
 					struct user_node *n = init_user_node(client_socket, req_data -> username);
@@ -123,11 +122,15 @@ void *client_handler(void * connfd){
 				}
 				else
 					resp_data -> login_success = false;
-
 				pthread_mutex_unlock(&mutex);
-
+				/*response login info to the client*/
 				send(client_socket, response_pkt, IM_PKT_SIZE, 0);
-
+				break;
+			case SERVICE_LOGOUT: ;
+				break;
+			case SERVICE_SINGLE_MESSAGE: ;
+				break;
+			case SERVICE_MULTI_MESSAGE: ;
 				break;
 			default:
 				printf("Received a error packet, drop it.\n");break;
@@ -137,7 +140,6 @@ void *client_handler(void * connfd){
 	if( n < 0)
 		printf("Read error\n");
 
-	
 	if(status == ONLINE_STATUS){
 
 		pthread_mutex_unlock(&mutex);
@@ -146,9 +148,6 @@ void *client_handler(void * connfd){
 
 		printf("\nuser %s logout\n", username);
 	}
-	
-
 	pthread_exit(NULL);
-
 }
 

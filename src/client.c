@@ -47,7 +47,7 @@ main(void){
 	
 	
 	login(client_sock);
-	printf("login success\n");
+	//printf("login success\n");
 	for( ; ; ){
 		//to be completed	
 	}
@@ -55,22 +55,6 @@ main(void){
 	/*close the tcp connection before exit*/
 	close(client_sock);
 	return 0;
-}
-
-
-/*the buf[size-1] will always be \0*/
-int
-get_keyboard_input(char *buf, int size) {
-	int buf_len = 0;
-	char c;
-
-	while ((c = getchar()) != '\t' && c != '\n' && buf_len < size - 1) {
-		buf[buf_len] = c;
-		buf_len++;
-	}
-
-	buf[buf_len] = '\0';
-	return buf_len;
 }
 
 
@@ -108,6 +92,5 @@ login(int client_sock){
 				break;
 		}
 		printf(	"Sorry, the name %s seems to have been taken, you can pick another one.\n\n", username);
-
 	}
 }
