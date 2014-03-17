@@ -8,7 +8,9 @@ void login();
 
 void logout();
 
-void query_online();
+void query_online_all();
+
+void *recv_packet_thread(void *);
 
 /*the buf[size-1] will always be \0*/
 int get_keyboard_input(char *buf, int size);

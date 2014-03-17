@@ -35,7 +35,7 @@ print_online_friends(struct user_queue *q){
 
 	struct user_node *n;
 	int i = 0;
-	printf("online friends' name are as follow:\n");
+	printf("online friends are:\n");
 	for (n = q -> front; n != NULL; n = n -> next){
 		printf("%s\t", n -> username);
 		i++;
