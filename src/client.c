@@ -13,56 +13,65 @@
 #include "protocol.h"
 #include "client.h"
 #include "bool.h"
+#include "queue.h"
 
 #define SERV_IP "127.0.0.1"
 #define SERV_PORT 6666
 
 #define BUF_SIZE 256
 
-char sendbuf[BUF_SIZE];
-char recvbuf[BUF_SIZE];
-int client_sock; 		/*global client socket*/
+char sendbuf[BUF_SIZE];	/*global send buffer, flushed before each send preparations*/
+char recvbuf[BUF_SIZE];	/*global receive buffer, flushed before each recieving packets*/
+int client_sock; 		/*global client socket, never change after create*/
 char username[20];		/*global username, never change after login*/
+
+/*an online friends list, 
+ *maintained by the server's SERVICE_ONLINE_NOTICE and SERVICE_OFFLINE_NOTICE 
+ *the socket field of each node is always -1. 
+ *attention: this variable should be locked on visit*/
+struct user_queue *online_friend_queue;
 
 int 
 main(void){
 
 	struct sockaddr_in server_addr;//server address
 	
-	/*create socket of TCP connection*/
+	/*client start preparations*/
 	if((client_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1){
 		printf("error create socket\n");
 		exit(-1);
 	}	
-
-	/*fill in the server address*/
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(SERV_PORT);//the weather server port
 	inet_pton(AF_INET, SERV_IP, &server_addr.sin_addr.s_addr);//weather server ip address
-
-	/*try to connect*/
 	if(connect(client_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1){
 		printf("error connect\n");
 		exit(-1);
 	}
+	online_friend_queue = init_user_queue();
 	
 	//load login page
 	login();
-	/*after login, the username will be settled down
+	/*plan: no more receive in this thread after login*/
+
+	/*after login, the username and current online friends list will be settled down
 	 *then load next page*/
 	if(system("clear")) ;
 	print_prompt_words(username);
 	while(true){
+		printf("enter >> ");
 		char command[20];
 		get_keyboard_input(command, 20);
 		//printf("debug:%s\n", command);
 		if(command[0] != '-'){
-			printf("input error, pls re-enter:");
+			printf("input error, you can try again.\n");
 			continue;
 		}
 		if(strcmp(&command[1], "list") == 0) {
-			query_online();
+			if(online_friend_queue -> front == NULL)
+				query_online();	//to be improved , into login
+			print_online_friends(online_friend_queue);
 			continue;
 
 		} else if(strcmp(&command[1], "clear") == 0){
@@ -74,11 +83,10 @@ main(void){
 			logout();
 			break;
 		} else{
-			printf("input error, pls re-enter:");
+			printf("input error, you can try again.\n");
 			continue;	
 		}
 	}
-
 	/*close the tcp connection before exit*/
 	close(client_sock);
 	return 0;
@@ -156,6 +164,14 @@ query_online(){
 	struct im_pkt_head *response_head = (struct im_pkt_head *)recvbuf;
 	assert((response_head -> type == TYPE_RESPONSE) && 
 		(response_head -> service == SERVICE_QUERY_ONLINE));
+
+	/*add all user into online_friend_queue*/
+	int i;
+	for (i = 0; i < response_head -> data_size / 20; ++i){
+		struct user_node *pnode = init_user_node(-1, (char *)(response_head + 1) + 20 * i);
+		enqueue(online_friend_queue, pnode);
+	}
+	/*
 	printf("online friends' name are as follow:\n");
 	int i;
 	for (i = 0; i < response_head -> data_size / 20; ++i){
@@ -164,6 +180,6 @@ query_online(){
 			printf("\n");
 	}
 	if((i % 4) != 0)
-		printf("\n");
+		printf("\n");*/
 	
 }

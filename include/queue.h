@@ -1,6 +1,7 @@
 #ifndef __QUEUE_H__
 #define __QUEUE_H__
 
+#include "bool.h"
 
 //extern int MAX_QUEUE_SIZE;
 

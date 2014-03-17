@@ -1,6 +1,9 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
+#include "protocol.h"
+#include "queue.h"
+
 void login();
 
 void logout();
@@ -11,6 +14,8 @@ void query_online();
 int get_keyboard_input(char *buf, int size);
 
 void print_prompt_words(char *username);
+
+void print_online_friends(struct user_queue *q);
 
 /* readn - read exactly n bytes */
 int readn( int sock_fd, char *bp, size_t len);
