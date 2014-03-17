@@ -51,6 +51,9 @@ void enqueue(struct user_queue *q, struct user_node *n){
 		n -> next = NULL;
 	}
 	q -> size ++;
+	//printf("debug: add user %s in the queue\n", n -> username);
+	//printf("debug: front %s, rear %s\n", q -> front -> username, q -> rear -> username);
+	
 }
 
 struct user_node* find_user_by_name(struct user_queue *q, char *name){
@@ -74,7 +77,7 @@ void delete_user_by_name(struct user_queue *q, char *name){
 		}
 		prev = n;
 	}
-	printf("error when delete: no user names %s\n", name);
+	//printf("error when delete: no user names %s\n", name);
 }
 
 /*delete the user node "curr"*/
@@ -86,8 +89,12 @@ void delete_user_node(struct user_queue *q, struct user_node *prev, struct user_
 		q -> front = curr -> next;
 	} else{
 		prev -> next = curr -> next;
+		if(q -> rear == curr)
+			q -> rear = prev;
 	}
 	q -> size --;
+	//printf("debug: delete user %s in queue\n", curr -> username);
+	//printf("debug: front %s, rear %s\n", q -> front -> username, q -> rear -> username);
 	free(curr);
 }
 
@@ -120,12 +127,12 @@ bool is_full(struct user_queue *q){
  *return the name number*/
 int copy_all_user_name(char * buf, struct user_queue *q){	
 	
-	int i;
-	struct user_node *n = q -> front; 
-	for(i = 0; i < q -> size; i++){
+	int i = 0;
+	struct user_node *n = q -> front;
+	for(; n != NULL; n = n -> next){
+		//printf("debug: size %d i %d name %s \n", q -> size, i, n -> username);
 		strncpy(&buf[20*i], n -> username, 20);
-		//printf("debug: username %s\n", n -> username);
-		n = n -> next;
+		i++;
 	}
 
 	return q -> size;

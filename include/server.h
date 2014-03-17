@@ -6,6 +6,9 @@
 
 void* client_handler(void*);
 
+/*notify all others when a user login/logout*/
+void on_off_line_notify(int SERVICE_ON_OFF, char *username, char *sendbuf);
+
 /*the buf[size-1] will always be \0*/
 int get_keyboard_input(char *buf, int size);
 

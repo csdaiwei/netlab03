@@ -13,6 +13,9 @@
 #define SERVICE_QUERY_ONLINE 0x02
 #define SERVICE_SINGLE_MESSAGE 0x03
 #define SERVICE_MULTI_MESSAGE 0x04
+#define SERVICE_ONLINE_NOTIFY 0x05
+#define SERVICE_OFFLINE_NOTIFY 0x06
+
 
 /*sizes*/
 #define IM_PKT_HEAD_SIZE  sizeof(struct im_pkt_head)

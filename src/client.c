@@ -201,18 +201,19 @@ recv_packet_thread(void *this_is_no_use){
 
 	int n = 0;	//number received 
 	while( (n = readvrec(client_sock, recvbuf, BUF_SIZE)) > 0){
-		struct im_pkt_head *request_head = (struct im_pkt_head *)recvbuf;
+		struct im_pkt_head *response_head = (struct im_pkt_head *)recvbuf;
+		char *response_data = (char *)(response_head + 1);
 		//struct im_pkt_head *response_head = (struct im_pkt_head *)sendbuf;
 		//int response_data_size;
 		//printf("debug:received a packet from socket:%d, type:%d, service:%d, data size:%d\n"
 		//	, client_socket, request_head -> type, request_head -> service, request_head -> data_size);
 
 		memset(sendbuf, 0, sizeof(sendbuf));
-		if(request_head -> type != TYPE_RESPONSE){
+		if(response_head -> type != TYPE_RESPONSE){
 			printf("Received a error packet, drop it.\n");
 			break;
 		}
-		switch(request_head -> service){
+		switch(response_head -> service){
 			case SERVICE_LOGIN: ;
 				break;
 			case SERVICE_LOGOUT: ;
@@ -222,6 +223,19 @@ recv_packet_thread(void *this_is_no_use){
 			case SERVICE_SINGLE_MESSAGE: ;
 				break;
 			case SERVICE_MULTI_MESSAGE: ;
+				break;
+			case SERVICE_ONLINE_NOTIFY: ;
+				char *that_online_username = response_data;
+				if(find_user_by_name(online_friend_queue, that_online_username) == NULL){
+					struct user_node *n = init_user_node(-1, that_online_username);
+					enqueue(online_friend_queue, n);
+				}
+				/*print this info?*/
+				break;
+			case SERVICE_OFFLINE_NOTIFY: ;
+				char *that_offline_username = response_data;
+				delete_user_by_name(online_friend_queue, that_offline_username);
+				/*print this info?*/
 				break;
 			default:
 				printf("Received a error packet, drop it.\n");break;
