@@ -16,7 +16,8 @@ server:$(SOBJS)
 client:$(COBJS)
 	$(CC) $(CFLAGS)	 -o client $(COBJS) 
 
-
 .PHONY:clean
 clean:
-	rm -f server client src/server.o src/client.o $(OBJS)
+	rm -f server client 
+	rm -f src/server.o src/client.o 
+	rm -f $(OBJS)

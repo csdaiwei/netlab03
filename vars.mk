@@ -1,4 +1,4 @@
-#http://coolshell.cn/articles/3790.html#more-3790
+#http://coolshell.cn/articles/3790.html
 
 %:
 	@echo '$*=$($*)'

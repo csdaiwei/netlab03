@@ -15,3 +15,12 @@ get_keyboard_input(char *buf, int size) {
 	buf[buf_len] = '\0';
 	return buf_len;
 }
+
+void
+print_prompt_words(char *username){
+	printf(	"Hello, %s. You can enter these command below to use me.\n", username);
+	printf(	"1.\"-list\"	show online friends\n"
+			"2.\"-clear\"	clear the screen\n"
+			"3.\"-logout\"	logout and exit\n");
+	printf(	"=========================================================\n");
+}

@@ -19,4 +19,7 @@ int readvrec( int sock_fd, char *bp, size_t len );
 /*construct an im packet head to "h"(first parameter)*/
 void construct_im_pkt_head(struct im_pkt_head *h, char type, char service, short data_size);
 
+/*concatenate the im pkt data after the im pkt head*/
+void concat_im_pkt_data(struct im_pkt_head *h, char *data);
+
 #endif

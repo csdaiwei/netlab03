@@ -21,6 +21,7 @@ struct user_node* init_user_node(int socket, char * username);	/*create a user n
 
 struct user_queue* init_user_queue(); 	/*create a empty queue*/
 
+void destroy_user_queue(struct user_queue *q);
 
 struct user_node* find_user_by_name(struct user_queue *q, char *name);
 
@@ -37,10 +38,9 @@ bool is_empty(struct user_queue *q);
 
 bool is_full(struct user_queue *q);
 
-/*
-void visit(struct user_node *n);
 
-void transverse(struct user_queue *q);
-*/
+/*copy all names into buf
+ *return the name number*/
+int copy_all_user_name(char * buf, struct user_queue *q);
 
 #endif

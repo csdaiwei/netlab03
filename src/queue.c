@@ -27,6 +27,12 @@ struct user_queue* init_user_queue(){
 	return q;
 };
 
+void
+destroy_user_queue(struct user_queue *q){
+	while(q -> size != 0)
+		dequeue(q);
+	free(q);
+}
 
 /*insert into rear of the queue*/
 void enqueue(struct user_queue *q, struct user_node *n){
@@ -73,7 +79,6 @@ void delete_user_by_name(struct user_queue *q, char *name){
 
 /*delete the user node "curr"*/
 void delete_user_node(struct user_queue *q, struct user_node *prev, struct user_node *curr){
-	//assert(prev != NULL);
 	assert(curr != NULL);
 	assert(!is_empty(q));
 	if(prev == NULL){
@@ -111,18 +116,17 @@ bool is_full(struct user_queue *q){
 	return false;
 }
 
+/*copy all names into buf
+ *return the name number*/
+int copy_all_user_name(char * buf, struct user_queue *q){	
+	
+	int i;
+	struct user_node *n = q -> front; 
+	for(i = 0; i < q -> size; i++){
+		strncpy(&buf[20*i], n -> username, 20);
+		//printf("debug: username %s\n", n -> username);
+		n = n -> next;
+	}
 
-/*
-void visit(struct user_node *n){
-	if(n != NULL)
-		printf("%s ", n -> username);
+	return q -> size;
 }
-
-void transverse(struct user_queue *q){
-	struct user_node *n = q -> front;
-	for( n = q -> front; n!= NULL; n = n ->next){
-		visit(n);
-	}	
-	printf("\n"); 
-}
-*/

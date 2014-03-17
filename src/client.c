@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include <errno.h>	//readn errno
 #include <arpa/inet.h>	//inet_addr()
@@ -21,6 +22,7 @@
 char sendbuf[BUF_SIZE];
 char recvbuf[BUF_SIZE];
 int client_sock; 		/*global client socket*/
+char username[20];		/*global username, never change after login*/
 
 int 
 main(void){
@@ -45,11 +47,36 @@ main(void){
 		exit(-1);
 	}
 	
-	
-	login(client_sock);
-	//printf("login success\n");
-	for( ; ; ){
-		//to be completed	
+	//load login page
+	login();
+	/*after login, the username will be settled down
+	 *then load next page*/
+	if(system("clear")) ;
+	print_prompt_words(username);
+	while(true){
+		char command[20];
+		get_keyboard_input(command, 20);
+		//printf("debug:%s\n", command);
+		if(command[0] != '-'){
+			printf("input error, pls re-enter:");
+			continue;
+		}
+		if(strcmp(&command[1], "list") == 0) {
+			query_online();
+			continue;
+
+		} else if(strcmp(&command[1], "clear") == 0){
+			if(system("clear")) ;
+			print_prompt_words(username);
+			continue;
+
+		} else if(strcmp(&command[1], "logout") == 0){
+			logout();
+			break;
+		} else{
+			printf("input error, pls re-enter:");
+			continue;	
+		}
 	}
 
 	/*close the tcp connection before exit*/
@@ -58,13 +85,12 @@ main(void){
 }
 
 
+
 /*send a login request to server*/
 void 
-login(int client_sock){
+login(){
 
-	char username[20];
-
-	if(system("reset"));//unused warnning
+	if(system("clear"));//unused warnning
 
 	printf(	"Hello, this is an IM program.\n" 
 			"You can pick a nickname and enter it below to login.\n"
@@ -76,29 +102,68 @@ login(int client_sock){
 
 		/*construct a login request packet and send it*/
 		memset(sendbuf, 0, sizeof(sendbuf));
-		struct im_pkt_head *request_head = (struct im_pkt_head *)sendbuf;
-		construct_im_pkt_head(request_head, TYPE_REQUEST, SERVICE_LOGIN, 20);	//20 is the data size , maybe there need hton
-		//struct login_request_data *req = (struct login_request_data *)login_pkt -> data; 
-		
-		strncpy(&sendbuf[IM_PKT_HEAD_SIZE], username, 20);//add the data field of the packet
-		send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + 20, 0);
-
-		/*int i;
-		for(i = 0; i < (IM_PKT_HEAD_SIZE + 20); i++)
-			printf("%02x ", sendbuf[i]);
-		printf("\n");*/
+		unsigned short data_size = 20;	//request im packet data size
+		construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_LOGIN, data_size);
+		concat_im_pkt_data((struct im_pkt_head *)sendbuf, username);
+		send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
 
 		/*get and parse the response packet*/
 		memset(recvbuf, 0 ,sizeof(recvbuf));
 		readvrec(client_sock, recvbuf, BUF_SIZE);
-		
 		struct im_pkt_head *response_head = (struct im_pkt_head *)recvbuf;
 		if(response_head -> service == SERVICE_LOGIN){
-			char *response_data = &recvbuf[IM_PKT_HEAD_SIZE];
+			char *response_data = (char *)(response_head + 1);//right after the head
 			bool login_success = (bool) response_data[0];
 			if(login_success)
 				break;
+			else{	//login falied. name repeat
+				printf(	"Sorry, the name %s seems to have been taken, you can pick another one.\n\n", username);
+				continue;
+			}
 		}
-		printf(	"Sorry, the name %s seems to have been taken, you can pick another one.\n\n", username);
+		printf("Sorry ,the server seems not work properly, you can try again\n");	
 	}
+}
+
+
+void
+logout(){
+
+	/*build a logout request packet and send it*/
+	memset(sendbuf, 0, sizeof(sendbuf));
+	int data_size = 0;
+	construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_LOGOUT, data_size);
+	concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
+	send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
+	/*printf("debug:");
+	int i;
+	for(i = 0; i < IM_PKT_HEAD_SIZE + data_size; i++)
+		printf("%02x", sendbuf[i]);*/
+}
+
+void
+query_online(){
+	/*build a query packet*/
+	memset(sendbuf, 0, sizeof(sendbuf));
+	int data_size = 0;
+	construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_QUERY_ONLINE, data_size);
+	concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
+	send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
+
+	/*get and parse the response packet*/
+	memset(recvbuf, 0 ,sizeof(recvbuf));
+	readvrec(client_sock, recvbuf, BUF_SIZE);
+	struct im_pkt_head *response_head = (struct im_pkt_head *)recvbuf;
+	assert((response_head -> type == TYPE_RESPONSE) && 
+		(response_head -> service == SERVICE_QUERY_ONLINE));
+	printf("online friends' name are as follow:\n");
+	int i;
+	for (i = 0; i < response_head -> data_size / 20; ++i){
+		printf("%s\t", (char *)(response_head + 1) + 20 * i);
+		if(((i + 1) % 4) == 0)
+			printf("\n");
+	}
+	if((i % 4) != 0)
+		printf("\n");
+	
 }
