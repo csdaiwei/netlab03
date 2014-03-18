@@ -23,7 +23,7 @@
 #define BUF_SIZE 256	/*enough for 8 users online*/
 
 /*a global socket for server*/
-int listenfd; 						
+int listenfd;						
 
 /*a global user queue, containing user info *
  *a lock is necessary when any threads read & write it*/
@@ -37,6 +37,7 @@ int main(void){
 	int connfd;
 	socklen_t clilen;
 	struct sockaddr_in cliaddr, servaddr;
+	int client_num = 0;
 	const int on = 1;	/*set socket option for SO_REUSEADDR*/
 	
 	/*preparations of the server*/
@@ -68,17 +69,20 @@ int main(void){
 		//printf("debug:client ip:%s, socket:%d\n", client_ip, connfd);
 
 		/*create a thread to handle the client*/
-		pthread_t tid;
-		int rc = pthread_create(&tid, NULL, client_handler, (void*)connfd);
-		if(rc){
-			printf("ERROR creating thread, tid %d, return code %d\n", (int)tid, rc);
-			exit(-1);
-		}
+		if(client_num < LISTENQ){
+			client_num ++;
+			pthread_t tid;
+			int rc = pthread_create(&tid, NULL, client_handler, (void*)connfd);
+			if(rc){
+				printf("ERROR creating thread, tid %d, return code %d\n", (int)tid, rc);
+				exit(-1);
+			}
+		} else
+			close(connfd);//too much client
 	}
-	/*exit procedures*/
-	//maybe need to do pthread cancel and pthread join here
+	
 	destroy_user_queue(online_user_queue);
-	close(connfd);
+	close(listenfd);
 }
 
 void 

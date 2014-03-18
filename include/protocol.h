@@ -57,7 +57,7 @@ struct im_pkt_head {
 	type 		service
 	REQUEST 	ONLINE_NOTIFY
 	REQUEST 	OFFLINE_NOTIFY
-	RESPONSE 	LOGOUT
+	RsESPONSE 	LOGOUT
  */
 
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "queue.h"
+#include "client.h"
 
 /*get keyoard input within limited characters.
  *\t and \n will not be accepted
@@ -29,8 +30,9 @@ print_prompt_words(char *username){
 	printf(	"Hello, %s. You can enter these command below to use me.\n", username);
 	printf(	"1.\"-list\"	show online friends\n"
 			"2.\"-chat\"	chat with friends\n"
-			"3.\"-clear\"	clear the screen\n"
-			"4.\"-logout\"	logout and exit\n");
+			"3.\"-recent\"	show recent 5 messages\n"
+			"4.\"-clear\"	clear the screen\n"
+			"5.\"-logout\"	logout and exit\n");
 	printf(	"===========================================================\n");
 }
 
@@ -48,5 +50,17 @@ print_online_friends(struct user_queue *q){
 	}
 	if((i % 4) != 0)
 		printf("\n");
+}
+
+void 
+print_recent_messages(struct message *recent_messages, int msg_num){
+	int i;
+	int n = (msg_num > 5) ? 5 : msg_num;
+	printf("==============================================\n");
+	for(i = 0; i < n; i++){
+		printf("Message from %s: \n", recent_messages[i].sender);
+		printf("Text: %s\n", recent_messages[i].text);
+	}
+	printf("==============================================\n");
 
 }
