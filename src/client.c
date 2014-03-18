@@ -33,6 +33,9 @@ char username[20];		/*global username, never change after login*/
  *attention: this variable should be locked on visit*/
 struct user_queue *online_friend_queue;
 
+struct message recent_messages[5];
+int message_num = 0;
+
 int 
 main(void){
 
@@ -90,7 +93,11 @@ main(void){
 		} else if(strcmp(&command[1], "logout") == 0){
 			logout();
 			break;//this lead to the end of the program.
-		} else if(strcmp(&command[1], "chat") == 0){
+
+		} else if(strcmp(&command[1], "recent") == 0){
+			print_recent_messages(recent_messages, message_num);
+			continue;
+		}else if(strcmp(&command[1], "chat") == 0){
 			/*bug:if someone's name is "all", bug happens*/
 			char recipient[20];
 			printf("Who do you want to talk to?\n" 
@@ -157,9 +164,13 @@ login(){
 			"You may pick a nickname and login.\n"
 			"==========================================\n");
 	while(true){
-		printf("Your name (no more than 15 characters):");
-		get_keyboard_input(username, 20);
-
+		while(true){
+			printf("Your name (no more than 15 characters):");
+			if(get_keyboard_input(username, 20) >= 3)
+				break;
+			else
+				printf("It's too short.\n");
+		}
 		/*construct a login request packet and send it*/
 		memset(sendbuf, 0, sizeof(sendbuf));
 		unsigned short data_size = 20;	//request im packet data size
@@ -169,9 +180,9 @@ login(){
 
 		/*get and parse the response packet*/
 		memset(recvbuf, 0 ,sizeof(recvbuf));
-		readvrec(client_sock, recvbuf, BUF_SIZE);
+		int n = readvrec(client_sock, recvbuf, BUF_SIZE);
 		struct im_pkt_head *response_head = (struct im_pkt_head *)recvbuf;
-		if(response_head -> service == SERVICE_LOGIN){
+		if( (n == 1) && (response_head -> service == SERVICE_LOGIN)){	//the response data size is 1
 			char *response_data = (char *)(response_head + 1);//right after the head
 			bool login_success = (bool) response_data[0];
 			if(login_success){
@@ -183,7 +194,8 @@ login(){
 				continue;
 			}
 		}
-		printf("Sorry ,the server seems not work properly, you can try again\n");	
+		printf("Sorry ,the server seems overloaded, wait a moment and try again.\n");
+		exit(-1);
 	}
 }
 
@@ -258,16 +270,16 @@ recv_packet_thread(void *this_is_no_use){
 			case SERVICE_SINGLE_MESSAGE: ;
 				char *sender = response_data;
 				char *text = response_data + 40;/*two names' length*/
-				printf("\nMessage comes from %s:\n %s:%s\nenter >>", sender, sender,text);
-				fflush(stdout);//!!
-
+				printf("\nMessage comes from %s:\n \t%s\nenter >> ", sender,text);
+				fflush(stdout);
+				save_recent_messages(sender, text);
 				break;
 			case SERVICE_MULTI_MESSAGE: ;
 				sender = response_data;
-				text = response_data + 20;/*two names' length*/
-				printf("\nMessage comes from %s:\n %s:%s\nenter >>", sender, sender,text);
-				fflush(stdout);//!!
-				
+				text = response_data + 20;/*one name's length*/
+				printf("\nMessage comes from %s:\n \t%s\nenter >> ", sender,text);
+				fflush(stdout);
+				save_recent_messages(sender, text);
 				break;
 			case SERVICE_ONLINE_NOTIFY: ;
 				char *that_online_username = response_data;
@@ -275,12 +287,10 @@ recv_packet_thread(void *this_is_no_use){
 					struct user_node *n = init_user_node(-1, that_online_username);
 					enqueue(online_friend_queue, n);
 				}
-				/*print this info?*/
 				break;
 			case SERVICE_OFFLINE_NOTIFY: ;
 				char *that_offline_username = response_data;
 				delete_user_by_name(online_friend_queue, that_offline_username);
-				/*print this info?*/
 				break;
 			default:
 				printf("\nReceived a error packet, drop it.\n enter >> ");break;
@@ -292,6 +302,12 @@ recv_packet_thread(void *this_is_no_use){
 	pthread_exit(NULL);
 }
 
-
+void save_recent_messages(char *sender, char *text){
+	
+	int subscript = message_num % 5;
+	strcpy(recent_messages[subscript].sender, sender);
+	strcpy(recent_messages[subscript].text, text);
+	message_num ++;
+}
 
 
