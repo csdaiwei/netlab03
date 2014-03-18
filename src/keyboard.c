@@ -16,8 +16,11 @@ get_keyboard_input(char *buf, int size) {
 		buf[buf_len] = c;
 		buf_len++;
 	}
-
 	buf[buf_len] = '\0';
+
+	if(buf_len == size - 1)
+		while(getchar()!='\n');//flush the system buffer
+	
 	return buf_len;
 }
 
