@@ -51,8 +51,6 @@ void enqueue(struct user_queue *q, struct user_node *n){
 		n -> next = NULL;
 	}
 	q -> size ++;
-	//printf("debug: add user %s in the queue\n", n -> username);
-	//printf("debug: front %s, rear %s\n", q -> front -> username, q -> rear -> username);
 	
 }
 
@@ -77,7 +75,6 @@ void delete_user_by_name(struct user_queue *q, char *name){
 		}
 		prev = n;
 	}
-	//printf("error when delete: no user names %s\n", name);
 }
 
 /*delete the user node "curr"*/
@@ -93,8 +90,6 @@ void delete_user_node(struct user_queue *q, struct user_node *prev, struct user_
 			q -> rear = prev;
 	}
 	q -> size --;
-	//printf("debug: delete user %s in queue\n", curr -> username);
-	//printf("debug: front %s, rear %s\n", q -> front -> username, q -> rear -> username);
 	free(curr);
 }
 
@@ -130,7 +125,6 @@ int copy_all_user_name(char * buf, struct user_queue *q){
 	int i = 0;
 	struct user_node *n = q -> front;
 	for(; n != NULL; n = n -> next){
-		//printf("debug: size %d i %d name %s \n", q -> size, i, n -> username);
 		strncpy(&buf[20*i], n -> username, 20);
 		i++;
 	}

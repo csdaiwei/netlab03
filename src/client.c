@@ -75,7 +75,6 @@ main(void){
 		printf("enter >> ");
 		char command[20];
 		get_keyboard_input(command, 20);
-		//printf("debug:%s\n", command);
 		if(command[0] != '-'){
 			printf("input error, you can try again.\n");
 			continue;
@@ -120,7 +119,6 @@ main(void){
 				strncpy(&sendbuf[IM_PKT_HEAD_SIZE + 20], text, 100);
 				send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
 			} else if(find_user_by_name(online_friend_queue, recipient) != NULL){
-				//printf("debug:%s\n", recipient);
 
 				char text[100];
 				printf("Input your words to say to %s.\n"
@@ -207,12 +205,8 @@ logout(){
 	memset(sendbuf, 0, sizeof(sendbuf));
 	int data_size = 0;
 	construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_LOGOUT, data_size);
-	//concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
 	send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
-	/*printf("debug:");
-	int i;
-	for(i = 0; i < IM_PKT_HEAD_SIZE + data_size; i++)
-		printf("%02x", sendbuf[i]);*/
+	
 }
 
 /*query for all online friends' names*/
@@ -222,7 +216,6 @@ query_online_all(){
 	memset(sendbuf, 0, sizeof(sendbuf));
 	int data_size = 0;
 	construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_QUERY_ONLINE, data_size);
-	//concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
 	send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
 
 	/*get and parse the response packet*/
@@ -250,23 +243,14 @@ recv_packet_thread(void *this_is_no_use){
 	while( (n = readvrec(client_sock, recvbuf, BUF_SIZE)) > 0){
 		struct im_pkt_head *response_head = (struct im_pkt_head *)recvbuf;
 		char *response_data = (char *)(response_head + 1);
-		//struct im_pkt_head *response_head = (struct im_pkt_head *)sendbuf;
-		//int response_data_size;
-		//printf("debug:received a packet from socket:%d, type:%d, service:%d, data size:%d\n"
-		//	, client_socket, request_head -> type, request_head -> service, request_head -> data_size);
-
+		
 		memset(sendbuf, 0, sizeof(sendbuf));
 		if(response_head -> type != TYPE_RESPONSE){
 			printf("\nReceived a error packet, drop it.\n enter >> ");
 			break;
 		}
 		switch(response_head -> service){
-			/*case SERVICE_LOGIN: ;
-				break;
-			case SERVICE_LOGOUT: ;
-				break;
-			case SERVICE_QUERY_ONLINE: ;
-				break;*/
+			
 			case SERVICE_SINGLE_MESSAGE: ;
 				char *sender = response_data;
 				char *text = response_data + 40;/*two names' length*/

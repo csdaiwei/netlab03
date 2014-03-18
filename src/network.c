@@ -93,6 +93,5 @@ concat_im_pkt_data(struct im_pkt_head *h, char *data){
 	assert(h -> data_size == 0 || data != 0);
 
 	char *p = (char *)(h + 1);// p points right after the im_pkt_head
-	//printf("debug h:%d, p:%d, correct:%d\n", (int)h, (int)p, (int)&((char *)h)[IM_PKT_HEAD_SIZE]);
 	memcpy(p, data, h -> data_size);
 }

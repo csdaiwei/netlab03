@@ -66,7 +66,6 @@ int main(void){
 		
 		char client_ip[16];
 		inet_ntop(AF_INET, (void *)&cliaddr.sin_addr.s_addr, client_ip, 16);
-		//printf("debug:client ip:%s, socket:%d\n", client_ip, connfd);
 
 		/*create a thread to handle the client*/
 		if(client_num < LISTENQ){
@@ -92,7 +91,6 @@ void
 	char username[20];	//the user's name connecting to this thread. will be filled when login
 	int status = -1;	//the user's status
 	int client_socket = (int)connfd;	//the user's socket connecting to this thread;
-	//debug://long tid = pthread_self();
 
 	assert(online_user_queue != NULL);
 		
@@ -100,8 +98,6 @@ void
 	char sendbuf[BUF_SIZE];
 	char recvbuf[BUF_SIZE];
 	
-	//printf("debug:thread %lu created for dealing with client requests\n", tid);
-
 	/*Receive the request im packet by two steps.
 	 *Firstly receive the head field, secondly receive the data field.
 	 *Then handle the request packet (usually by a response packet)*/
@@ -110,8 +106,6 @@ void
 		struct im_pkt_head *response_head = (struct im_pkt_head *)sendbuf;
 		char *request_data = (char *)(request_head + 1);
 		int response_data_size = 0;
-		//printf("debug:received a packet from socket:%d, type:%d, service:%d, data size:%d\n"
-		//	, client_socket, request_head -> type, request_head -> service, request_head -> data_size);
 
 		memset(sendbuf, 0, sizeof(sendbuf));
 		if(request_head -> type != TYPE_REQUEST){
@@ -130,7 +124,6 @@ void
 				//check repeat
 				pthread_mutex_lock(&mutex);
 				if(find_user_by_name( online_user_queue, username) == NULL){
-					//printf("debug:here2\n");
 					struct user_node *pnode = init_user_node(client_socket, username);
 					enqueue(online_user_queue, pnode);
 					status = ONLINE_STATUS;
@@ -143,18 +136,14 @@ void
 					login_result = false;
 				}
 				pthread_mutex_unlock(&mutex);
-				//printf("debug: thread %lu release lock\n", tid);
 				construct_im_pkt_head(response_head, TYPE_RESPONSE, SERVICE_LOGIN, response_data_size);
 				concat_im_pkt_data(response_head, (char *)&login_result);
 				send(client_socket, sendbuf, IM_PKT_HEAD_SIZE + response_data_size, 0);
-				//printf("debug:response packet send to socket:%d, type:%d, service:%d, data size:%d\n"
-				//	, client_socket, response_head -> type, response_head -> service, response_head -> data_size);
 				break;
 			case SERVICE_LOGOUT: ;
 				/*nothing need to do here.*/
 				break;
 			case SERVICE_QUERY_ONLINE: ;
-
 				/*copy all usernames into the data field of the response packet*/
 				pthread_mutex_lock(&mutex);
 				response_data_size = 20 * copy_all_user_name((char *)(response_head + 1), online_user_queue);
@@ -164,8 +153,7 @@ void
 				send(client_socket, sendbuf, IM_PKT_HEAD_SIZE + response_data_size, 0);
 				break;
 			case SERVICE_SINGLE_MESSAGE: ;
-				//printf("debug: sender %s, recipient %s, text %s\n", request_data, request_data + 20, request_data + 40);
-				/*simple resend the packet to the recipient*/
+				/*simply resend the packet to the recipient*/
 				char *recipient = request_data + 20;
 				struct user_node *recipient_node = find_user_by_name(online_user_queue, recipient); 
 				if(recipient_node != NULL){
@@ -177,7 +165,6 @@ void
 					printf("Error, no recipient %s. drop the packet\n", recipient);
 				break;
 			case SERVICE_MULTI_MESSAGE: ;
-				//printf("debug: sender %s, recipient all, text %s\n", request_data, request_data + 20);
 				response_data_size = request_head -> data_size;
 				construct_im_pkt_head(response_head, TYPE_RESPONSE, SERVICE_MULTI_MESSAGE, response_data_size);
 				concat_im_pkt_data(response_head, request_data);
