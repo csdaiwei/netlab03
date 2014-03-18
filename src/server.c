@@ -75,8 +75,10 @@ int main(void){
 			exit(-1);
 		}
 	}
-	//end of server main
+	/*exit procedures*/
+	//maybe need to do pthread cancel and pthread join here
 	destroy_user_queue(online_user_queue);
+	close(connfd);
 }
 
 void 
@@ -102,7 +104,8 @@ void
 	while( (n = readvrec(client_socket, recvbuf, BUF_SIZE)) > 0){
 		struct im_pkt_head *request_head = (struct im_pkt_head *)recvbuf;
 		struct im_pkt_head *response_head = (struct im_pkt_head *)sendbuf;
-		int response_data_size;
+		char *request_data = (char *)(request_head + 1);
+		int response_data_size = 0;
 		//printf("debug:received a packet from socket:%d, type:%d, service:%d, data size:%d\n"
 		//	, client_socket, request_head -> type, request_head -> service, request_head -> data_size);
 
@@ -144,38 +147,42 @@ void
 				//	, client_socket, response_head -> type, response_head -> service, response_head -> data_size);
 				break;
 			case SERVICE_LOGOUT: ;
-				assert(status == ONLINE_STATUS);
-				/*notify all other users*/
-				on_off_line_notify(SERVICE_OFFLINE_NOTIFY, username, sendbuf);
-				/*remove this user from queue*/
-				pthread_mutex_lock(&mutex);
-				delete_user_by_name(online_user_queue, username);
-				pthread_mutex_unlock(&mutex);
-				status = -1;
-				printf("\tuser %s logout\n", username);
+				/*nothing need to do here.*/
 				break;
 			case SERVICE_QUERY_ONLINE: ;
-				printf("\tuser %s query for online friends\n", username);
+
+				/*copy all usernames into the data field of the response packet*/
 				pthread_mutex_lock(&mutex);
-				//printf("debug:here1\n");
 				response_data_size = 20 * copy_all_user_name((char *)(response_head + 1), online_user_queue);
-				//printf("debug:here2\n");
 				pthread_mutex_unlock(&mutex);
 				construct_im_pkt_head(response_head, TYPE_RESPONSE, SERVICE_QUERY_ONLINE, response_data_size);
-
-				/*//debug:
-				int i;
-				for (i = 0; i < response_data_size / 20; ++i){
-					printf("%s\t", (char *)(response_head + 1) + 20 * i);
-				}
-				printf("\n");*/
+				/*send the packet*/
 				send(client_socket, sendbuf, IM_PKT_HEAD_SIZE + response_data_size, 0);
 				break;
 			case SERVICE_SINGLE_MESSAGE: ;
+				//printf("debug: sender %s, recipient %s, text %s\n", request_data, request_data + 20, request_data + 40);
+				/*simple resend the packet to the recipient*/
+				char *recipient = request_data + 20;
+				struct user_node *recipient_node = find_user_by_name(online_user_queue, recipient); 
+				if(recipient_node != NULL){
+					response_data_size = request_head -> data_size;
+					construct_im_pkt_head(response_head, TYPE_RESPONSE, SERVICE_SINGLE_MESSAGE, response_data_size);
+					concat_im_pkt_data(response_head, request_data);
+					send(recipient_node -> socket, sendbuf,IM_PKT_HEAD_SIZE + response_data_size, 0);
+				}else
+					printf("Error, no recipient %s. drop the packet\n", recipient);
 				break;
 			case SERVICE_MULTI_MESSAGE: ;
+				//printf("debug: sender %s, recipient all, text %s\n", request_data, request_data + 20);
+				response_data_size = request_head -> data_size;
+				construct_im_pkt_head(response_head, TYPE_RESPONSE, SERVICE_MULTI_MESSAGE, response_data_size);
+				concat_im_pkt_data(response_head, request_data);
+				char *sender = request_data;
+				/*send to all online users except this message's sender*/
+				for(recipient_node = online_user_queue -> front; recipient_node != NULL; recipient_node = recipient_node -> next)
+					if(strcmp(recipient_node -> username, sender) != 0)
+						send(recipient_node -> socket, sendbuf,IM_PKT_HEAD_SIZE + response_data_size, 0);
 				break;
-
 			default:
 				printf("Received a error packet, drop it.\n");break;
 		}
@@ -185,8 +192,8 @@ void
 		printf("Read error\n");
 
 	if(status == ONLINE_STATUS){
-		/*remove those online users who didn't logout but out of conncetion */
-		//on_off_line_notify(SERVICE_OFFLINE_NOTIFY, username, sendbuf);
+		/*remove logout or disconnected  users from the queue*/
+		on_off_line_notify(SERVICE_OFFLINE_NOTIFY, username, sendbuf);
 		pthread_mutex_lock(&mutex);
 		delete_user_by_name(online_user_queue, username);
 		pthread_mutex_unlock(&mutex);

@@ -25,9 +25,10 @@ void
 print_prompt_words(char *username){
 	printf(	"Hello, %s. You can enter these command below to use me.\n", username);
 	printf(	"1.\"-list\"	show online friends\n"
-			"2.\"-clear\"	clear the screen\n"
-			"3.\"-logout\"	logout and exit\n");
-	printf(	"=========================================================\n");
+			"2.\"-chat\"	chat with friends\n"
+			"3.\"-clear\"	clear the screen\n"
+			"4.\"-logout\"	logout and exit\n");
+	printf(	"===========================================================\n");
 }
 
 void

@@ -89,13 +89,58 @@ main(void){
 
 		} else if(strcmp(&command[1], "logout") == 0){
 			logout();
-			break;
-		} else{
+			break;//this lead to the end of the program.
+		} else if(strcmp(&command[1], "chat") == 0){
+			/*bug:if someone's name is "all", bug happens*/
+			char recipient[20];
+			printf("Who do you want to talk to?\n" 
+				"Type he/she's name or type \"all\":");
+			get_keyboard_input(recipient, 20);
+			if(strcmp(recipient, username) == 0){
+				printf("it's funny to talk to yourself.\n");
+			} 
+			else if(strcmp(recipient, "all") == 0){
+				char text[100];
+				printf("Input your words to say to %s.\n"
+					   "Within 100 characters, end up with the Enter key):\n", recipient);
+				get_keyboard_input(text, 100);
+
+				/*build and send the packet*/
+				memset(sendbuf, 0, sizeof(sendbuf));
+				unsigned short data_size = 20 + 100;
+				construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_MULTI_MESSAGE, data_size);
+				strncpy(&sendbuf[IM_PKT_HEAD_SIZE], username, 20);
+				strncpy(&sendbuf[IM_PKT_HEAD_SIZE + 20], text, 100);
+				send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
+			} else if(find_user_by_name(online_friend_queue, recipient) != NULL){
+				//printf("debug:%s\n", recipient);
+
+				char text[100];
+				printf("Input your words to say to %s.\n"
+					   "Within 100 characters, end up with the Enter key):\n", recipient);
+				get_keyboard_input(text, 100);
+
+				/*build and send the packet*/
+				memset(sendbuf, 0, sizeof(sendbuf));
+				unsigned short data_size = 20 + 20 + 100;
+				construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_SINGLE_MESSAGE, data_size);
+				strncpy(&sendbuf[IM_PKT_HEAD_SIZE], username, 20);
+				strncpy(&sendbuf[IM_PKT_HEAD_SIZE + 20], recipient, 20);
+				strncpy(&sendbuf[IM_PKT_HEAD_SIZE + 40], text, 100);
+				send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
+
+			} else{
+				printf("sorry, %s seems not online now\n", recipient);
+				print_online_friends(online_friend_queue);
+			}
+			continue;
+		}  else{
 			printf("input error, you can try again.\n");
 			continue;	
 		}
 	}
-	/*close the tcp connection before exit*/
+	/*close socket and stop another thread before exit*/
+	pthread_cancel(tid);
 	close(client_sock);
 	return 0;
 }
@@ -109,8 +154,8 @@ login(){
 	if(system("clear"));//unused warnning
 
 	printf(	"Hello, this is an IM program.\n" 
-			"You can pick a nickname and enter it below to login.\n"
-			"======================================================================\n");
+			"You may pick a nickname and login.\n"
+			"==========================================\n");
 	while(true){
 		printf("Your name (no more than 15 characters):");
 		get_keyboard_input(username, 20);
@@ -134,7 +179,7 @@ login(){
 				break;
 			}
 			else{	//login falied. name repeat
-				printf(	"Sorry, the name %s seems to have been taken, you can pick another one.\n\n", username);
+				printf(	"\nSorry, that name seems to have been taken, pick another one!\n");
 				continue;
 			}
 		}
@@ -150,7 +195,7 @@ logout(){
 	memset(sendbuf, 0, sizeof(sendbuf));
 	int data_size = 0;
 	construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_LOGOUT, data_size);
-	concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
+	//concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
 	send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
 	/*printf("debug:");
 	int i;
@@ -165,7 +210,7 @@ query_online_all(){
 	memset(sendbuf, 0, sizeof(sendbuf));
 	int data_size = 0;
 	construct_im_pkt_head((struct im_pkt_head *)sendbuf, TYPE_REQUEST, SERVICE_QUERY_ONLINE, data_size);
-	concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
+	//concat_im_pkt_data((struct im_pkt_head *)sendbuf, NULL);
 	send(client_sock, sendbuf, IM_PKT_HEAD_SIZE + data_size, 0);
 
 	/*get and parse the response packet*/
@@ -181,16 +226,6 @@ query_online_all(){
 		struct user_node *pnode = init_user_node(-1, (char *)(response_head + 1) + 20 * i);
 		enqueue(online_friend_queue, pnode);
 	}
-	/*
-	printf("online friends' name are as follow:\n");
-	int i;
-	for (i = 0; i < response_head -> data_size / 20; ++i){
-		printf("%s\t", (char *)(response_head + 1) + 20 * i);
-		if(((i + 1) % 4) == 0)
-			printf("\n");
-	}
-	if((i % 4) != 0)
-		printf("\n");*/
 	
 }
 
@@ -210,19 +245,29 @@ recv_packet_thread(void *this_is_no_use){
 
 		memset(sendbuf, 0, sizeof(sendbuf));
 		if(response_head -> type != TYPE_RESPONSE){
-			printf("Received a error packet, drop it.\n");
+			printf("\nReceived a error packet, drop it.\n enter >> ");
 			break;
 		}
 		switch(response_head -> service){
-			case SERVICE_LOGIN: ;
+			/*case SERVICE_LOGIN: ;
 				break;
 			case SERVICE_LOGOUT: ;
 				break;
 			case SERVICE_QUERY_ONLINE: ;
-				break;
+				break;*/
 			case SERVICE_SINGLE_MESSAGE: ;
+				char *sender = response_data;
+				char *text = response_data + 40;/*two names' length*/
+				printf("\nMessage comes from %s:\n %s:%s\nenter >>", sender, sender,text);
+				fflush(stdout);//!!
+
 				break;
 			case SERVICE_MULTI_MESSAGE: ;
+				sender = response_data;
+				text = response_data + 20;/*two names' length*/
+				printf("\nMessage comes from %s:\n %s:%s\nenter >>", sender, sender,text);
+				fflush(stdout);//!!
+				
 				break;
 			case SERVICE_ONLINE_NOTIFY: ;
 				char *that_online_username = response_data;
@@ -238,7 +283,7 @@ recv_packet_thread(void *this_is_no_use){
 				/*print this info?*/
 				break;
 			default:
-				printf("Received a error packet, drop it.\n");break;
+				printf("\nReceived a error packet, drop it.\n enter >> ");break;
 		}
 		memset(recvbuf, 0, sizeof(recvbuf));
 	}

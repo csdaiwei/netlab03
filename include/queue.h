@@ -28,7 +28,6 @@ struct user_node* find_user_by_name(struct user_queue *q, char *name);
 
 void delete_user_by_name(struct user_queue *q, char *name);
 
-/*delete the user node "curr". not suitable when delete the front node*/
 void delete_user_node(struct user_queue *q, struct user_node *prev, struct user_node *curr);
 
 void enqueue(struct user_queue *q, struct user_node *n);	/*insert into rear of the queue*/
