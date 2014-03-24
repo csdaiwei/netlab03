@@ -1,0 +1,9 @@
+一个命令行的IM软件。
+
+服务器程序可执行文件为server，客户端程序可执行文件为client。
+
+默认使用127.0.0.1:6666作为server的IP地址、端口号。
+
+键入“./server”运行服务器程序，键入“./client”运行客户端程序。
+
+make命令会默认编译出server和client两个可执行文件，使用命令make server或make client可分别编译。

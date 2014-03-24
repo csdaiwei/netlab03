@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -O2 -pthread -I./include #-Werror 
+CFLAGS = -Wall -Werror -O2 -pthread -I./include  
 
 #objects for both server and client 
 OBJS = src/network.o src/queue.o src/keyboard.o
