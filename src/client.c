@@ -270,11 +270,15 @@ recv_packet_thread(void *this_is_no_use){
 				if(find_user_by_name(online_friend_queue, that_online_username) == NULL){
 					struct user_node *n = init_user_node(-1, that_online_username);
 					enqueue(online_friend_queue, n);
+					printf("\n User %s get online!\nenter >> ", that_online_username);
+					fflush(stdout);
 				}
 				break;
 			case SERVICE_OFFLINE_NOTIFY: ;
 				char *that_offline_username = response_data;
 				delete_user_by_name(online_friend_queue, that_offline_username);
+				printf("\n User %s get offline!\nenter >> ", that_online_username);
+				fflush(stdout);
 				break;
 			default:
 				printf("\nReceived a error packet, drop it.\n enter >> ");break;
