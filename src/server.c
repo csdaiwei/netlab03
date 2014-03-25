@@ -25,6 +25,9 @@
 /*a global socket for server*/
 int listenfd;						
 
+/*client number now connecting to the server*/
+int client_num = 0;
+
 /*a global user queue, containing user info *
  *a lock is necessary when any threads read & write it*/
 struct user_queue *online_user_queue = NULL; 	
@@ -37,7 +40,7 @@ int main(void){
 	int connfd;
 	socklen_t clilen;
 	struct sockaddr_in cliaddr, servaddr;
-	int client_num = 0;
+
 	const int on = 1;	/*set socket option for SO_REUSEADDR*/
 	
 	/*preparations of the server*/
@@ -192,6 +195,7 @@ void
 		pthread_mutex_unlock(&mutex);
 		status = -1;
 		printf("\tuser %s logout\n", username);
+		client_num --;
 	}
 	pthread_exit(NULL);
 }

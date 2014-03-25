@@ -7,3 +7,7 @@
 键入“./server”运行服务器程序，键入“./client”运行客户端程序。
 
 make命令会默认编译出server和client两个可执行文件，使用命令make server或make client可分别编译。
+
+另：nodebug分支是我的最新代码，master分支包含一些debug输出，已经不使用。
+
+

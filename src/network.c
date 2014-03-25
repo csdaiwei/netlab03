@@ -1,3 +1,7 @@
+/*reference: code from the course website
+ *http://cscms.nju.edu.cn/pluginfile.php/1024/mod_resource/content/1/readn.c
+ *http://cscms.nju.edu.cn/pluginfile.php/1025/mod_resource/content/1/readvrec.c*/
+
 #include <stdio.h>
 #include <stdlib.h> 	//size_t
 #include <string.h>		//memcpy
@@ -66,7 +70,6 @@ int readvrec( int sock_fd, char *bp, size_t len )
 	}
 
 	/* Retrieve the record itself */
-	//printf("debug:reclen%d\n", reclen);
 	if(reclen != 0){
 		rc = readn( sock_fd, &bp[IM_PKT_HEAD_SIZE], reclen );
 		if ( rc != reclen )

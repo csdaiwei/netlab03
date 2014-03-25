@@ -43,12 +43,12 @@ print_online_friends(struct user_queue *q){
 	int i = 0;
 	printf("online friends are:\n");
 	for (n = q -> front; n != NULL; n = n -> next){
-		printf("%s\t", n -> username);
+		printf("%20s", n -> username);
 		i++;
-		if((i % 4) == 0)
+		if((i % 2) == 0)
 			printf("\n");
 	}
-	if((i % 4) != 0)
+	if((i % 2) != 0)
 		printf("\n");
 }
 
