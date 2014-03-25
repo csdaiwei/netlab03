@@ -161,6 +161,7 @@ void
 					construct_im_pkt_head(response_head, TYPE_RESPONSE, SERVICE_SINGLE_MESSAGE, response_data_size);
 					concat_im_pkt_data(response_head, request_data);
 					send(recipient_node -> socket, sendbuf,IM_PKT_HEAD_SIZE + response_data_size, 0);
+					printf("\tuser %s send a message to %s, text %s\n", username, recipient, request_data + 40);
 				}else
 					printf("Error, no recipient %s. drop the packet\n", recipient);
 				break;
@@ -173,6 +174,7 @@ void
 				for(recipient_node = online_user_queue -> front; recipient_node != NULL; recipient_node = recipient_node -> next)
 					if(strcmp(recipient_node -> username, sender) != 0)
 						send(recipient_node -> socket, sendbuf,IM_PKT_HEAD_SIZE + response_data_size, 0);
+				printf("\tuser %s send a multi-message, text %s\n", username, request_data + 20);
 				break;
 			default:
 				printf("Received a error packet, drop it.\n");break;

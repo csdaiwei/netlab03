@@ -43,15 +43,15 @@ struct im_pkt_head {
  *  REQUEST 		LOGIN 					20   					login username
  	REQUEST   		LOGOUT 					0 
  	REQUEST 		QUERY_ONLINE 			0 
-	REQUEST 		SINGLE_MESSAGE 			to be implement
-	REQUEST 		MULTI_MESSAGE 			to be implement
+	REQUEST 		SINGLE_MESSAGE 			140						sender(20), recipient(20), text(100)
+	REQUEST 		MULTI_MESSAGE 			
 	
  	RESPONSE 		LOGIN 					1 						login success/fail
  	RESPONSE 		QUERY_ONLINE 			(n-1)*20 				online usernames
  	RESPONSE 		ONLINE_NOTIFY 			20 						username who get online
  	RESPONSE 		OFFLINE_NOTIFY 			20 						username who get offline
- 	RESPONSE 		SINGLE_MESSAGE 			to be implement
- 	RESPONSE 		MULTI_MESSAGE 			to be implement
+ 	RESPONSE 		SINGLE_MESSAGE 			140						sender(20), recipient(20), text(100)
+ 	RESPONSE 		MULTI_MESSAGE 			120						sender(20), text(100)
 	
 	there are also some combinations that will never appear
 	type 		service
